@@ -4,7 +4,7 @@ CREATE TABLE spring_demo.data_item
 (
     item_id String,
     timestamp DateTime64,
-    data FLOAT,
+    data Float32,
     item_key String,
     construction String
 )

@@ -76,29 +76,29 @@ public class MqttDigitalSignRsaApplication {
 //        return adapter;
 //    }
 
-//    @Bean
-//    public IntegrationFlow mqttInboundDecrypt() {
-//        MqttPahoMessageDrivenChannelAdapter adapter =new MqttPahoMessageDrivenChannelAdapter("tcp://103.183.113.120:1883", "testClient",
-//                "rsa_sign/digital");
-//        adapter.setQos(2);
-//        adapter.setCompletionTimeout(5000);
-//        return IntegrationFlows.from(adapter)
-////                .handle( message -> this.eventReceiveData(message, "tatrach"))
-//                .handle(m ->this.handleMessage(m, "tatrach"))
-//                .get();
-//    }
-
     @Bean
-    public IntegrationFlow mqttInbound() {
+    public IntegrationFlow mqttInboundDecrypt() {
         MqttPahoMessageDrivenChannelAdapter adapter =new MqttPahoMessageDrivenChannelAdapter("tcp://103.183.113.120:1883", "testClient",
-                "tatrach");
+                "rsa_sign/pachien");
         adapter.setQos(2);
         adapter.setCompletionTimeout(5000);
         return IntegrationFlows.from(adapter)
-                .handle( message -> this.eventReceiveData(message, "tatrach"))
-//                .handle(m ->this.handleMessage(m, "tatrach"))
+//                .handle( message -> this.eventReceiveData(message, "tatrach"))
+                .handle(m ->this.handleMessage(m, "pachien"))
                 .get();
     }
+
+//    @Bean
+//    public IntegrationFlow mqttInbound() {
+//        MqttPahoMessageDrivenChannelAdapter adapter =new MqttPahoMessageDrivenChannelAdapter("tcp://103.183.113.120:1883", "testClient",
+//                "pachien");
+//        adapter.setQos(2);
+//        adapter.setCompletionTimeout(5000);
+//        return IntegrationFlows.from(adapter)
+//                .handle( message -> this.eventReceiveData(message, "pachien"))
+////                .handle(m ->this.handleMessage(m, "tatrach"))
+//                .get();
+//    }
 
     private void eventReceiveData(Message<?> message, String construction) {
         rawEvent.onNext(message);
@@ -133,6 +133,8 @@ public class MqttDigitalSignRsaApplication {
             }
             payloadMap.put("decrypt", realValue);
             payloadMap.put("verify", true);
+            Date timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(payloadMap.get("timestamp").toString());
+//            this.dataItemRepository.save(new DataItem(this.dataItemRepository.getNewItemId(), Timestamp.from(timestamp.toInstant()), (float) realValue, key.get(), construction));
         }catch (Exception e) {
             e.printStackTrace();
             payloadMap.put("verify", false);

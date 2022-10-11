@@ -9,6 +9,9 @@ services:
       - 9440:9440
     networks:
       - clickhouse
+    volumes:
+      - D:/clickhouse_db:/var/lib/clickhouse
+
   clickhouse-client:
     image: yandex/clickhouse-client:21.4
     networks:

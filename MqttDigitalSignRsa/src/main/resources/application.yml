@@ -6,3 +6,6 @@ spring:
     username: admin
     password: admin
     url: "jdbc:mysql://localhost:9004/spring_demo?serverTimezone=UTC"
+
+  jpa:
+    show-sql: true
