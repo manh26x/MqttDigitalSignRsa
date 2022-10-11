@@ -1,3 +1,5 @@
+local rsaFunctions = {}
+
 math.randomseed(os.time())
 math.random() math.random() math.random()
 
@@ -53,11 +55,28 @@ function isProbablyPrime(n, accuracy)
     return true
 end
 
+function frexp(x)
+    if x == 0 then return 0.0,0.0 end
+    local e = math.floor(math.log(math.abs(x)) / math.log(2, 10))
+    if e > 0 then
+        -- Why not x / 2^e? Because for large-but-still-legal values of e this
+        -- ends up rounding to inf and the wheels come off.
+        x = x * 2^-e
+    else
+        x = x / 2^e
+    end
+    -- Normalize to the range [0.5,1)
+    if math.abs(x) >= 1.0 then
+        x,e = x/2,e+1
+    end
+    return x,e
+end
+
 function toBits(num)
     local t={}
     --math.frexp(n) -> m, e  :  n = m2^e; 0.5 <= m < 1
     --so this sets i to the total amount of binary digits w/o padding
-    for i=select(2,math.frexp(num)),1,-1 do
+    for i=select(2,frexp(num)),1,-1 do
         rest=math.fmod(num,2)
         t[i]=rest
         num=math.floor((num-rest)/2)
@@ -100,78 +119,24 @@ function egcd(a, b)
     return b, x, y
 end
 
-
-math.randomseed(os.time())
-math.random() math.random() math.random()
-
-
-
-function generatePrimes(bitLen)
-    assert(bitLen<33, "Maximum bit length is 32.")
-    n = math.floor(bitLen*math.log10(2))
-    possiblePrime = 0
-    repeat
-        possiblePrime = math.random(10^(n-1), 10^n)
-    until isProbablyPrime(possiblePrime, 50)
-    return possiblePrime
-end
-
-function generateKeys(bitLen)
-    p = generatePrimes(bitLen)
-    q = 0
-    repeat
-        q = generatePrimes(bitLen)
-    until p ~= q
-    n = p*q
-    totient  = (p-1)*(q-1)
-    e = 0
-
-    smallE = {3, 5, 7, 11, 13, 17, 23, 29, 31}
-    for i=1, #smallE do
-        if gcd(totient, smallE[i]) == 1 then
-            e = smallE[i]
-            break
-        end
-    end
-    assert(e~=0, "e was never properly assigned.")
-
-    gcd,x,y = egcd(e, totient)
-    d = x
-    if x<0 then
-        d = totient+x
-    end
-
-    return e, n, d
-end
-
 function encrypt(params)
     return fastModExp(params[1], params[2], params[3])
 end
 
 function encrypt_byte(params)
-    local byte_value = math.floor(params[1] * 100 + 0.5)
-    print(byte_value)
     local e = params[2]
     local n = params[3]
-    --local byte_value = string.byte(value)
-    --print('type value ' .. type(byte_value) .. ' : ' .. byte_value)
-    --print('value ' .. string.format("%b", byte_value))
-    local hash_value = byte_value ^ (( byte_value / 5 ) + (byte_value / 2) + 5)
-    print('hash ' .. hash_value)
-    local encrypt_value = fastModExp(byte_value, e, n)
-    local result = "{"
-    result = result .. "\"tcp" .. (299 + i) .. "\": " .. encrypt_value .. ", "
-    result = result .. "\"hashValue\": " .. hash_value
-    result = result .. "}"
-    return result
+    return fastModExp(params[1], e, n)
 end
 function decrypt(crypt, d, n)
     return fastModExp(crypt, d, n)
 end
 --print(generateKeys(16))
-encryptedmsg  = encrypt({22.5, 5, 20453369})
-print( "hello fsd" .. encryptedmsg)
-function print_hello()
-    print( "hello")
+--encryptedmsg  = encrypt({22.5, 5, 20453369})
+function check_hash(params)
+    local value = params[1]
+    local salt =parmas[2]
+    local hash = params[3]
+    assert(hash == (value * salt + 123 + math.floor(value * (11/(salt+3)) + 321)) % math.floor(salt^0.77), 'invalid value')
 
 end
